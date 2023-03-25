@@ -188,6 +188,6 @@ app.post('/post-movimiento', (req, res) => {
 
 
   
-app.listen(port, () => {
+app.listen(process.env.PORT||port, () => {
     console.log(`Example app listening on port ${process.env.PORT||port}`)
   })  
