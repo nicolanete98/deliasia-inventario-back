@@ -1,7 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const express = require('express')
 const app = express()
-const port = 3000
+const port = 4000
 const db = new sqlite3.Database('./DB_DELIASIA.db');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -10,6 +10,7 @@ app.use(cors());
 
 app.get('/', (req, res) => {
   console.log('get /')
+  res.send('holas')
   })
 app.get('/get-productos', (req, res) => {
   console.log('get /')
