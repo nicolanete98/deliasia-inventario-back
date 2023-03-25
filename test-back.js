@@ -7,6 +7,10 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 
 app.use(cors());
+
+app.get('/', (req, res) => {
+  console.log('get /')
+  })
 app.get('/get-productos', (req, res) => {
   console.log('get /')
     db.all('SELECT * FROM productos', function(err, rows) {
@@ -14,6 +18,7 @@ app.get('/get-productos', (req, res) => {
         res.send(rows)
       });
   })
+
 
 app.get('/get-recetas', (req, res) => {
   console.log('get /')
