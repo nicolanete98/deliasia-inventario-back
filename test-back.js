@@ -1,189 +1,236 @@
 const sqlite3 = require('sqlite3').verbose();
+const mysql = require('mysql');
 const express = require('express')
 const app = express()
-const port = 4000
+const port = 3000
 const db = new sqlite3.Database('./DB_DELIASIA.db');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+require('dotenv').config();
+
+const convertirString = (string) =>{
+  return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+}
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.use(cors());
+
+const pool = mysql.createPool({
+  host: process.env.HOST,
+  user: process.env.USER,
+  password: process.env.PASSWORD,
+  database: process.env.DATABASE,
+  connectionLimit: process.env.CONNECTIONLIMIT
+});
 
 app.get('/', (req, res) => {
   console.log('get /')
   res.send('holas')
-  })
+})
 app.get('/get-productos', (req, res) => {
-  console.log('get /')
-    db.all('SELECT * FROM productos', function(err, rows) {
-        
-        res.send(rows)
-      });
-  })
+  //console.log('get /')
+  pool.query('SELECT * FROM productos order by fecha desc', (error, results, fields) => {
+    if (error) {
+      res.status(500).send(error);
+    } else {
+      res.json(results);
+    }
+  });
+})
 
 
 app.get('/get-recetas', (req, res) => {
-  console.log('get /')
-    db.all('SELECT * FROM recetas', function(err, rows) {
-        
-        res.send(rows)
-      });
-  })
+  //console.log('get /')
+  pool.query('SELECT * FROM recetas', (error, results, fields) => {
+    if (error) {
+      res.status(500).send(error);
+    } else {
+      res.json(results);
+    }
+  });
+})
 
 app.get('/get-recetas-distinct', (req, res) => {
-  console.log('get-precios/')
-    db.all('SELECT distinct nomb_plato FROM recetas', function(err, rows) {
-        
-        res.send(rows)
-      });
-  })
+  //console.log('get-precios/')
+  pool.query('SELECT distinct nomb_plato FROM recetas', (error, results, fields) => {
+    if (error) {
+      res.status(500).send(error);
+    } else {
+      res.json(results);
+    }
+  });
+})
 app.get('/get-precio', (req, res) => {
-    console.log('get /')
-      db.all('SELECT * FROM precio_venta', function(err, rows) {
-          
-          res.send(rows)
-        });
-    })
+  //console.log('get /')
+  pool.query('SELECT * FROM precio_venta', (error, results, fields) => {
+    if (error) {
+      res.status(500).send(error);
+    } else {
+      res.json(results);
+    }
+  });
+})
 app.get('/get-compras', (req, res) => {
-  console.log('get-compras /')
-    db.all('SELECT * FROM compras', function(err, rows) {
-        
-        res.send(rows)
-      });
-  })
+  //console.log('get-compras /')
+  pool.query('SELECT * FROM compras', (error, results, fields) => {
+    if (error) {
+      res.status(500).send(error);
+    } else {
+      res.json(results);
+    }
+  });
+})
 app.get('/get-movimiento', (req, res) => {
-  console.log('get-movimiento /')
-    db.all('SELECT * FROM movimientos', function(err, rows) {
-        
-        res.send(rows)
-      });
-  })
-  app.get('/get-ventas', (req, res) => {
-    console.log('get-compras /')
-      db.all('SELECT * FROM ventas', function(err, rows) {
-          res.send(rows)
-        });
-    })
+  //console.log('get-movimiento /')
+  pool.query('SELECT * FROM movimientos', (error, results, fields) => {
+    if (error) {
+      res.status(500).send(error);
+    } else {
+      res.json(results);
+    }
+  });
+})
 
-// app.get('/get-test', (req, res) => {
-//   console.log('get /')
-//     db.all('SELECT nomb_plato FROM precio_venta', function(err, rows) {
-//         console.log(rows)
-//         res.send(rows)
-//       });
-//   })  
+app.get('/get-ventas', (req, res) => {
+  //console.log('get-compras /')
+  pool.query('SELECT * FROM ventas', (error, results, fields) => {
+    if (error) {
+      res.status(500).send(error);
+    } else {
+      res.json(results);
+    }
+  });
+})
+//POST
   
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+
 app.post('/post-productos', (req, res) => {
     //res.send('/post')
-    console.log(req.body)
-    db.serialize(function() {
-      const date = (new Date(Date.now()))
-      const date1 = date.getDate() + "-"  + (date.getMonth()+1) + "-" + date.getFullYear()
-      console.log(date1)
-      db.run(`insert into productos values('${req.body.Nombre}','${req.body.Categoria}','${req.body.Unidad}',${req.body.Merma},0,0,'${date1}')`,function (err) {
-        if (err){
-          res.status(400).send('err')
-          console.log(err)
-        }
-        else{
-          res.status(200).send('ok')
-        }
-      });
-    })
+  console.log(req.body)
+  db.serialize(function() {
+    const date = (new Date(Date.now()))
+    const date1 = date.getFullYear() + "-"  + (date.getMonth()+1) + "-" + date.getDate() + " "+ date.getHours() + ":" + date.getMinutes() + ":00"
+
+    console.log(date1)
+    pool.query(`insert into productos values('${convertirString(req.body.Nombre )}','${convertirString(req.body.Categoria)}','${convertirString(req.body.Unidad)}',${req.body.Merma},0,0,'${convertirString(date1)}')`, (error, results, fields) => {
+      if (error) {
+        res.status(500).send(error);
+      } else {
+        res.json(results);
+      }
+    });
+  })
   
   })
 
 app.post('/post-recetas', (req, res) => {
   res.send('/post-recetas')
   console.log(req.body)
-  db.serialize(function() {
-      db.run(`insert into recetas values('${req.body.Nombre}','${req.body.Categoria}','${req.body.Producto}',${req.body.Cantidad},'${req.body.Unidad}')`);
-  })
+  pool.query(`insert into recetas values('${convertirString(req.body.Nombre)}','${convertirString(req.body.Categoria)}','${convertirString(req.body.Producto)}',${req.body.Cantidad},'${convertirString(req.body.Unidad)}')`, (error, results, fields) => {
+    if (error) {
+      res.status(500).send(error);
+    } else {
+      console.log(results)
+      //res.json(results);
+    }
+  });
 })
 
 app.post('/post-delete-recetas', (req, res) => {
   res.send('/post-recetas')
   console.log(req.body)
-
-  db.serialize(function() {
-      db.run(`DELETE FROM recetas where nomb_plato = '${req.body.nomb_plato}' AND categoria = '${req.body.categoria}' AND nomb_producto = '${req.body.nomb_producto}' AND cantidad = ${req.body.cantidad} AND unidad_cantidad = '${req.body.unidad_cantidad}'`);
-  })
+  pool.query(`DELETE FROM recetas where nomb_plato = '${convertirString(req.body.nomb_plato)}' AND categoria = '${convertirString(req.body.categoria)}' AND nomb_producto = '${convertirString(req.body.nomb_producto)}' AND cantidad = ${req.body.cantidad} AND unidad_cantidad = '${convertirString(req.body.unidad_cantidad)}'`, (error, results, fields) => {
+    if (error) {
+      res.status(500).send(error);
+    } else {
+      //res.json(results);
+    }
+  });
 })
 
 app.post('/post-precios', (req, res) => {
-  res.send('/post-precios')
   console.log(req.body)
-  db.all(`SELECT nomb_plato FROM precio_venta WHERE nomb_plato = '${req.body.Nombre}'`, function(err, rows) {
-            if(rows.length !== 0){
-              db.serialize(function() {
-                const date = (new Date(Date.now()))
-                const date1 = date.getDate() + "-"  + (date.getMonth()+1) + "-" + date.getFullYear()
-                db.run(`update precio_venta set  precio = ${req.body.Precio}, fecha = '${date1}' where nomb_plato = '${req.body.Nombre}'`);
-              })
-            }else{
-              db.serialize(function() {
-                const date = (new Date(Date.now()))
-                const date1 = date.getDate() + "-"  + (date.getMonth()+1) + "-" + date.getFullYear()
-                db.run(`insert into precio_venta values('${req.body.Nombre}',${req.body.Precio},'${date1}')`);
-              })
-            }
-          });
+  pool.query(`SELECT nomb_plato FROM precio_venta WHERE nomb_plato = '${convertirString(req.body.Nombre)}'`,(error, results, fields) => {
+    if (error) {
+      res.status(500).send(error);
+    } else {
+      if(results.length !== 0){
+        const date = (new Date(Date.now()))
+        const date1 = date.getFullYear() + "-"  + (date.getMonth()+1) + "-" + date.getDate() + " "+ date.getHours() + ":" + date.getMinutes() + ":00"
+        pool.query(`update precio_venta set  precio = ${req.body.Precio}, fecha = '${convertirString(date1)}' where nomb_plato = '${convertirString(req.body.Nombre)}'`);
+      }else{
+        const date = (new Date(Date.now()))
+        const date1 = date.getFullYear() + "-"  + (date.getMonth()+1) + "-" + date.getDate() + " "+ date.getHours() + ":" + date.getMinutes() + ":00"
+        pool.query(`insert into precio_venta values('${convertirString(req.body.Nombre)}',${req.body.Precio},'${convertirString(date1)}')`);
+      }
+      res.status(200).send('/post-precios')
+    }
+  });
 })
 app.post('/post-compras', (req, res) => {
   res.send('/post-compras')
   console.log(req.body)
-  db.serialize(function() {
-      const date = (new Date(Date.now()))
-      const date1 = date.getDate() + "-"  + (date.getMonth()+1) + "-" + date.getFullYear()
-      db.all(`SELECT * FROM productos where nomb_producto = '${req.body.Nombre}'`, function(err, rows) {
+    const date = (new Date(Date.now()))
+    const date1 = date.getFullYear() + "-"  + (date.getMonth()+1) + "-" + date.getDate() + " "+ date.getHours() + ":" + date.getMinutes() + ":00"
+        pool.query(`SELECT * FROM productos where nomb_producto = '${convertirString(req.body.Nombre)}'`, (error, results, fields) => {
+      if (error) {
+        res.status(500).send(error);
+      } else {
         let newPrecio,newCantidad
-        if(rows[0].precio_unidad<(Number(req.body.Precio)/(Number(req.body.Cantidad)-(Number(req.body.Cantidad)*Number(rows[0].merma))))){
-          newPrecio = (Number(req.body.Precio)/(Number(req.body.Cantidad)-(Number(req.body.Cantidad)*Number(rows[0].merma))))
+        if(results[0].precio_unidad<(Number(req.body.Precio)/(Number(req.body.Cantidad)-(Number(req.body.Cantidad)*Number(results[0].merma))))){
+          newPrecio = (Number(req.body.Precio)/(Number(req.body.Cantidad)-(Number(req.body.Cantidad)*Number(results[0].merma))))
         }
         else{
-          newPrecio = rows[0].precio_unidad
+          newPrecio = results[0].precio_unidad
         }
-        console.log(newPrecio)
-        newCantidad = Number(rows[0].cantidad) + Number(req.body.Cantidad)
-        const query = `update productos set precio_unidad = ${newPrecio}, cantidad = ${newCantidad},fecha = '${date1}' where nomb_producto = '${req.body.Nombre}'`
-        db.run(query);
-
-      });
-      db.run(`insert into compras values('${req.body.Nombre}',${req.body.Cantidad},${req.body.Precio},'${req.body.Tienda}','${date1}')`);
-      
-
-  })
+        newCantidad = Number(results[0].cantidad) + Number(req.body.Cantidad)
+        const query = `update productos set precio_unidad = ${newPrecio}, cantidad = ${newCantidad},fecha = '${convertirString(date1)}' where nomb_producto = '${convertirString(req.body.Nombre)}'`
+        pool.query(query);
+      }
+      pool.query(`insert into compras values('${convertirString(req.body.Nombre)}',${req.body.Cantidad},${req.body.Precio},'${convertirString(req.body.Tienda)}','${convertirString(date1)}')`);
+    });
 })
 app.post('/post-ventas', (req, res) => {
   res.send('/post-ventas')
   console.log(req.body)
   const date = (new Date(Date.now()))
-  const date1 = date.getDate() + "-"  + (date.getMonth()+1) + "-" + date.getFullYear()
-  db.serialize(function() {
-      db.run(`insert into ventas values('${req.body.Nombre}',${req.body.Cantidad},'${req.body.Local}','${date1}')`);
-      db.all(`SELECT 
-                A.nomb_producto as nombre ,A.cantidad-(B.cantidad * ${Number(req.body.Cantidad)}) as cantidad
-                FROM productos A
-                right join recetas B on A.nomb_producto = B.nomb_producto 
-                Where B.nomb_plato = '${req.body.Nombre}'`
-            ,function(err, rows) {
-              console.log(rows)
-              rows.map(row =>
-                db.run(`update productos set  cantidad = ${row.cantidad}, fecha = '${date1}' where nomb_producto = '${row.nombre}'`)
-              )
-      });
-  })
+  const date1 = date.getFullYear() + "-"  + (date.getMonth()+1) + "-" + date.getDate() + " "+ date.getHours() + ":" + date.getMinutes() + ":00"
+    pool.query(`insert into ventas values('${convertirString(req.body.Nombre)}',${req.body.Cantidad},'${convertirString(req.body.Local)}','${convertirString(date1)}')`, (error, results, fields) => {
+    if (error) {
+      res.status(500).send(error);
+    } else {
+      //res.json(results);
+    }
+  });
+  pool.query(`SELECT 
+    A.nomb_producto as nombre ,A.cantidad-(B.cantidad * ${Number(req.body.Cantidad)}) as cantidad
+    FROM productos A
+    right join recetas B on A.nomb_producto = B.nomb_producto 
+    Where B.nomb_plato = '${convertirString(req.body.Nombre)}'`, (error, results, fields) => {
+    if (error) {
+      res.status(500).send(error);
+    } else {
+      results.map(row =>
+        pool.query(`update productos set  cantidad = ${row.cantidad}, fecha = '${convertirString(date1)}' where nomb_producto = '${convertirString(row.nombre)}'`)
+      )
+    }
+  });
 })
 
 app.post('/post-movimiento', (req, res) => {
   res.send('/post-movimientos')
   console.log(req.body)
   const date = (new Date(Date.now()))
-  const date1 = date.getDate() + "-"  + (date.getMonth()+1) + "-" + date.getFullYear()
-  db.serialize(function() {
-      db.run(`insert into movimientos values('${req.body.Movimiento}','${req.body.Tipo}',${req.body.Monto},'${req.body.Descripcion}','${date1}')`);
-  })
+  const date1 = date.getFullYear() + "-"  + (date.getMonth()+1) + "-" + date.getDate() + " "+ date.getHours() + ":" + date.getMinutes().toString() + ":00"
+  console.log(date1)
+    pool.query(`insert into movimientos values('${convertirString(req.body.Movimiento)}','${convertirString(req.body.Tipo)}',${req.body.Monto},'${convertirString(req.body.Descripcion)}','${convertirString(date1)}')`, (error, results, fields) => {
+    if (error) {
+      res.status(500).send(error);
+    } else { 
+      //res.json(results);
+    }
+  });
 })
 
 
