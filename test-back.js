@@ -242,7 +242,7 @@ app.post('/post-login', (req, res) => {
         if(!validPass){
           res.status(400).send('Usuario o contraseña invalidas')
         }else{
-          res.status(200).send({auth:True,msg:'Logged'})
+          res.status(200).send({auth:true,msg:'Logged'})
         }
       }else{
         res.status(400).send('Usuario no existe')
