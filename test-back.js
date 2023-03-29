@@ -12,12 +12,7 @@ require('dotenv').config();
 const convertirString = (string) =>{
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
-app.use(cors({
-  origin: ["https://inventario.deliasia.co",'http://127.0.0.1:5173'],
-  methods: ["GET", "POST", "DELETE"],
-  credentials: true,
-  origin: true,
-}));
+app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
