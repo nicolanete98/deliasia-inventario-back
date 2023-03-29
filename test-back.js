@@ -24,14 +24,12 @@ const pool = mysql.createPool({
   database: process.env.DATABASE,
   connectionLimit: process.env.CONNECTIONLIMIT
 });
-//------------------
-const salt = bcrypt.genSaltSync()
-const pass = bcrypt.hashSync('Hola mundo',salt)
-//------------------
+
 app.get('/', (req, res) => {
   console.log('get /')
   res.send('holas')
 })
+
 app.get('/get-productos', (req, res) => {
   //console.log('get /')
   pool.query('SELECT * FROM productos order by fecha desc', (error, results, fields) => {
