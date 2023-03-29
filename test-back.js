@@ -1,8 +1,9 @@
 const sqlite3 = require('sqlite3').verbose();
 const mysql = require('mysql');
+const bcrypt = require('bcryptjs')
 const express = require('express')
 const app = express()
-const port = 3000
+const port = 4000
 const db = new sqlite3.Database('./DB_DELIASIA.db');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -23,7 +24,10 @@ const pool = mysql.createPool({
   database: process.env.DATABASE,
   connectionLimit: process.env.CONNECTIONLIMIT
 });
-
+//------------------
+const salt = bcrypt.genSaltSync()
+const pass = bcrypt.hashSync('Hola mundo',salt)
+//------------------
 app.get('/', (req, res) => {
   console.log('get /')
   res.send('holas')
@@ -224,17 +228,63 @@ app.post('/post-movimiento', (req, res) => {
   const date = (new Date(Date.now()))
   const date1 = date.getFullYear() + "-"  + (date.getMonth()+1) + "-" + date.getDate() + " "+ date.getHours() + ":" + date.getMinutes().toString() + ":00"
   console.log(date1)
-    pool.query(`insert into movimientos values('${convertirString(req.body.Movimiento)}','${convertirString(req.body.Tipo)}',${req.body.Monto},'${convertirString(req.body.Descripcion)}','${convertirString(date1)}')`, (error, results, fields) => {
-    if (error) {
-      res.status(500).send(error);
-    } else { 
-      //res.json(results);
-    }
-  });
+    pool.query(`insert into movimientos values('${convertirString(req.body.Movimiento)}','${convertirString(req.body.Tipo)}',${req.body.Monto},'${convertirString(req.body.Descripcion)}','${convertirString(date1)}')`);
 })
 
+app.post('/post-login', (req, res) => {
+  //res.send('/post-login')
+  console.log(req.body)
+  pool.query(`SELECT * FROM users WHERE user = '${req.body.User}'`,(error, results, fields) => {
+    if (error) {
+      res.status(400).send(error);
+    } else {
+      if(results.length !== 0){
+        const validPass = bcrypt.compareSync(req.body.Password,results[0].password)
+        if(!validPass){
+          res.status(400).send('Usuario o contraseña invalidas')
+        }else{
+          res.status(200).send({auth:True,msg:'Logged'})
+        }
+      }else{
+        res.status(400).send('Usuario no existe')
+      }
+
+
+    }
+  })
+  
+})
+
+app.post('/post-register', (req, res) => {
+  //res.send('/post-register')
+  console.log(req.body)
+  pool.query(`SELECT * FROM users WHERE user = '${req.body.User}'`,(error, results, fields) => {
+    if (error) {
+      res.status(500).send(error);
+    } else {
+      if(results.length === 0){
+
+        const salt = bcrypt.genSaltSync()
+        const pass = bcrypt.hashSync(req.body.Password,salt)
+        pool.query(`insert into users (user,password,email) values('${req.body.User}','${pass}','${req.body.Email}')`,(error,results) =>{
+          if(error){
+            console.log(error)
+          }
+          else{
+            res.status(200).send('Usuario Creado')
+          }
+        })
+
+      }
+      else{
+        res.status(200).send('Usuario ya existe')
+      }
+
+    }
+  })
+})  
 
   
 app.listen(process.env.PORT||port, () => {
     console.log(`Example app listening on port ${process.env.PORT||port}`)
-  })  
+  })
