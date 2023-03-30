@@ -7,6 +7,7 @@ const port = 4000
 const db = new sqlite3.Database('./DB_DELIASIA.db');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const { generarJWT } = require('./jwt');
 require('dotenv').config();
 
 const convertirString = (string) =>{
@@ -233,7 +234,7 @@ app.post('/post-movimiento', (req, res) => {
 app.post('/post-login', (req, res) => {
   //res.send('/post-login')
   console.log(req.body)
-  pool.query(`SELECT * FROM users WHERE user = '${req.body.User}'`,(error, results, fields) => {
+  pool.query(`SELECT * FROM users WHERE user = '${req.body.User}'`,async(error, results, fields) => {
     if (error) {
       res.status(400).send(error);
     } else {
@@ -242,7 +243,9 @@ app.post('/post-login', (req, res) => {
         if(!validPass){
           res.status(400).send('Usuario o contraseña invalidas')
         }else{
-          res.status(200).send({auth:true,msg:'Logged'})
+          const token =  await generarJWT({user:req.body.User, email: req.body.Email})          
+          console.log(token)
+          res.status(200).send({auth:true,msg:'Logged',token})
         }
       }else{
         res.status(400).send('Usuario no existe')
@@ -283,7 +286,10 @@ app.post('/post-register', (req, res) => {
   })
 })  
 
-  
+// app.post('/post-checkJWT', (req, res) => {
+//   //res.send('/post-movimientos')
+ 
+// })  
 app.listen(process.env.PORT||port, () => {
     console.log(`Example app listening on port ${process.env.PORT||port}`)
   })
