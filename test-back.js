@@ -7,6 +7,7 @@ const port = 4000
 const db = new sqlite3.Database('./DB_DELIASIA.db');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken')
 const { generarJWT } = require('./jwt');
 require('dotenv').config();
 
@@ -117,7 +118,7 @@ app.post('/post-productos', (req, res) => {
     const date1 = date.getFullYear() + "-"  + (date.getMonth()+1) + "-" + date.getDate() + " "+ date.getHours() + ":" + date.getMinutes() + ":00"
 
     console.log(date1)
-    pool.query(`insert into productos values('${convertirString(req.body.Nombre )}','${convertirString(req.body.Categoria)}','${convertirString(req.body.Unidad)}',${req.body.Merma},0,0,'${convertirString(date1)}')`, (error, results, fields) => {
+    pool.query(`insert into productos values('${convertirString(req.body.Nombre )}','${convertirString(req.body.Categoria)}','${convertirString(req.body.Unidad)}',${req.body.Merma.replaceAll(',','')},0,0,'${convertirString(date1)}')`, (error, results, fields) => {
       if (error) {
         res.status(500).send(error);
       } else {
@@ -131,11 +132,11 @@ app.post('/post-productos', (req, res) => {
 app.post('/post-recetas', (req, res) => {
   res.send('/post-recetas')
   console.log(req.body)
-  pool.query(`insert into recetas values('${convertirString(req.body.Nombre)}','${convertirString(req.body.Categoria)}','${convertirString(req.body.Producto)}',${req.body.Cantidad},'${convertirString(req.body.Unidad)}')`, (error, results, fields) => {
+  pool.query(`insert into recetas values('${convertirString(req.body.Nombre)}','${convertirString(req.body.Categoria)}','${convertirString(req.body.Producto)}',${req.body.Cantidad.replaceAll(',','')},'${convertirString(req.body.Unidad)}')`, (error, results, fields) => {
     if (error) {
       res.status(500).send(error);
     } else {
-      console.log(results)
+      //console.log(results)
       //res.json(results);
     }
   });
@@ -144,7 +145,7 @@ app.post('/post-recetas', (req, res) => {
 app.post('/post-delete-recetas', (req, res) => {
   res.send('/post-recetas')
   console.log(req.body)
-  pool.query(`DELETE FROM recetas where nomb_plato = '${convertirString(req.body.nomb_plato)}' AND categoria = '${convertirString(req.body.categoria)}' AND nomb_producto = '${convertirString(req.body.nomb_producto)}' AND cantidad = ${req.body.cantidad} AND unidad_cantidad = '${convertirString(req.body.unidad_cantidad)}'`, (error, results, fields) => {
+  pool.query(`DELETE FROM recetas where nomb_plato = '${convertirString(req.body.nomb_plato)}' AND categoria = '${convertirString(req.body.categoria)}' AND nomb_producto = '${convertirString(req.body.nomb_producto)}' AND cantidad = ${req.body.cantidad.replaceAll(',','')} AND unidad_cantidad = '${convertirString(req.body.unidad_cantidad)}'`, (error, results, fields) => {
     if (error) {
       res.status(500).send(error);
     } else {
@@ -162,11 +163,11 @@ app.post('/post-precios', (req, res) => {
       if(results.length !== 0){
         const date = (new Date(Date.now()))
         const date1 = date.getFullYear() + "-"  + (date.getMonth()+1) + "-" + date.getDate() + " "+ date.getHours() + ":" + date.getMinutes() + ":00"
-        pool.query(`update precio_venta set  precio = ${req.body.Precio}, fecha = '${convertirString(date1)}' where nomb_plato = '${convertirString(req.body.Nombre)}'`);
+        pool.query(`update precio_venta set  precio = ${req.body.Precio.replaceAll(',','')}, fecha = '${convertirString(date1)}' where nomb_plato = '${convertirString(req.body.Nombre)}'`);
       }else{
         const date = (new Date(Date.now()))
         const date1 = date.getFullYear() + "-"  + (date.getMonth()+1) + "-" + date.getDate() + " "+ date.getHours() + ":" + date.getMinutes() + ":00"
-        pool.query(`insert into precio_venta values('${convertirString(req.body.Nombre)}',${req.body.Precio},'${convertirString(date1)}')`);
+        pool.query(`insert into precio_venta values('${convertirString(req.body.Nombre)}',${req.body.Precio.replaceAll(',','')},'${convertirString(date1)}')`);
       }
       res.status(200).send('/post-precios')
     }
@@ -183,16 +184,16 @@ app.post('/post-compras', (req, res) => {
       } else {
         let newPrecio,newCantidad
         if(results[0].precio_unidad<(Number(req.body.Precio)/(Number(req.body.Cantidad)-(Number(req.body.Cantidad)*Number(results[0].merma))))){
-          newPrecio = (Number(req.body.Precio)/(Number(req.body.Cantidad)-(Number(req.body.Cantidad)*Number(results[0].merma))))
+          newPrecio = (Number(req.body.Precio.replaceAll(',',''))/(Number(req.body.Cantidad.replaceAll(',',''))-(Number(req.body.Cantidad.replaceAll(',',''))*Number(results[0].merma   ))))
         }
         else{
           newPrecio = results[0].precio_unidad
         }
-        newCantidad = Number(results[0].cantidad) + Number(req.body.Cantidad)
+        newCantidad = Number(results[0].cantidad) + Number(req.body.Cantidad.replaceAll(',',''))
         const query = `update productos set precio_unidad = ${newPrecio}, cantidad = ${newCantidad},fecha = '${convertirString(date1)}' where nomb_producto = '${convertirString(req.body.Nombre)}'`
         pool.query(query);
       }
-      pool.query(`insert into compras values('${convertirString(req.body.Nombre)}',${req.body.Cantidad},${req.body.Precio},'${convertirString(req.body.Tienda)}','${convertirString(date1)}')`);
+      pool.query(`insert into compras values('${convertirString(req.body.Nombre)}',${req.body.Cantidad.replaceAll(',','')},${req.body.Precio.replaceAll(',','')},'${convertirString(req.body.Tienda)}','${convertirString(date1)}')`);
     });
 })
 app.post('/post-ventas', (req, res) => {
@@ -200,7 +201,7 @@ app.post('/post-ventas', (req, res) => {
   console.log(req.body)
   const date = (new Date(Date.now()))
   const date1 = date.getFullYear() + "-"  + (date.getMonth()+1) + "-" + date.getDate() + " "+ date.getHours() + ":" + date.getMinutes() + ":00"
-    pool.query(`insert into ventas values('${convertirString(req.body.Nombre)}',${req.body.Cantidad},'${convertirString(req.body.Local)}','${convertirString(date1)}')`, (error, results, fields) => {
+    pool.query(`insert into ventas values('${convertirString(req.body.Nombre)}',${req.body.Cantidad.replaceAll(',','')},'${convertirString(req.body.Local)}','${convertirString(date1)}')`, (error, results, fields) => {
     if (error) {
       res.status(500).send(error);
     } else {
@@ -208,7 +209,7 @@ app.post('/post-ventas', (req, res) => {
     }
   });
   pool.query(`SELECT 
-    A.nomb_producto as nombre ,A.cantidad-(B.cantidad * ${Number(req.body.Cantidad)}) as cantidad
+    A.nomb_producto as nombre ,A.cantidad-(B.cantidad * ${Number(req.body.Cantidad.replaceAll(',',''))}) as cantidad
     FROM productos A
     right join recetas B on A.nomb_producto = B.nomb_producto 
     Where B.nomb_plato = '${convertirString(req.body.Nombre)}'`, (error, results, fields) => {
@@ -228,7 +229,7 @@ app.post('/post-movimiento', (req, res) => {
   const date = (new Date(Date.now()))
   const date1 = date.getFullYear() + "-"  + (date.getMonth()+1) + "-" + date.getDate() + " "+ date.getHours() + ":" + date.getMinutes().toString() + ":00"
   console.log(date1)
-    pool.query(`insert into movimientos values('${convertirString(req.body.Movimiento)}','${convertirString(req.body.Tipo)}',${req.body.Monto},'${convertirString(req.body.Descripcion)}','${convertirString(date1)}')`);
+    pool.query(`insert into movimientos values('${convertirString(req.body.Movimiento)}','${convertirString(req.body.Tipo)}',${req.body.Monto.replaceAll(',','')},'${convertirString(req.body.Descripcion)}','${convertirString(date1)}')`);
 })
 
 app.post('/post-login', (req, res) => {
@@ -286,10 +287,22 @@ app.post('/post-register', (req, res) => {
   })
 })  
 
-// app.post('/post-checkJWT', (req, res) => {
-//   //res.send('/post-movimientos')
+app.post('/checkJWT', (req, res) => {
+  console.log(req.body )
+  try{
+    const payload = jwt.verify(
+      req.body.token,
+      'test-prueba-palabra'
+    )
+    console.log(req.headers)
+    console.log('works')
+    res.status(200).send({auth: true})
+  }catch{
+    console.log('no valido')
+    res.status(400).send({auth: false})
+  }
  
-// })  
+})  
 app.listen(process.env.PORT||port, () => {
     console.log(`Example app listening on port ${process.env.PORT||port}`)
   })
