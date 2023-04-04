@@ -1,10 +1,8 @@
-const sqlite3 = require('sqlite3').verbose();
 const mysql = require('mysql');
 const bcrypt = require('bcryptjs')
 const express = require('express')
 const app = express()
 const port = 4000
-const db = new sqlite3.Database('./DB_DELIASIA.db');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken')
@@ -32,6 +30,13 @@ app.get('/', (req, res) => {
   console.log('get /')
   res.send('holas')
 })
+
+app.use('/api/productos', require('./00-GET/getProductos'))
+app.use('/api/recetas', require('./00-GET/getRecetas'))
+app.use('/api/precio', require('./00-GET/getPrecioVenta'))
+app.use('/api/compras', require('./00-GET/getCompras'))
+app.use('/api/movimiento', require('./00-GET/getMovimientos'))
+app.use('/api/ventas', require('./00-GET/getVentas'))
 
 app.get('/get-productos', (req, res) => {
   //console.log('get /')
@@ -229,7 +234,7 @@ app.post('/post-movimiento', (req, res) => {
   const date = (new Date(Date.now()))
   const date1 = date.getFullYear() + "-"  + (date.getMonth()+1) + "-" + date.getDate() + " "+ date.getHours() + ":" + date.getMinutes().toString() + ":00"
   console.log(date1)
-    pool.query(`insert into movimientos values('${convertirString(req.body.Movimiento)}','${convertirString(req.body.Tipo)}',${req.body.Monto.replaceAll(',','')},'${convertirString(req.body.Descripcion)}','${convertirString(date1)}')`);
+    pool.query(`insert into movimientos values('${convertirString(req.body.Movimiento)}','${convertirString(req.body.Tipo)}','${convertirString(req.body.Local)}',${req.body.Monto.replaceAll(',','')},'${convertirString(req.body.Descripcion)}','${convertirString(date1)}')`);
 })
 
 app.post('/post-login', (req, res) => {
