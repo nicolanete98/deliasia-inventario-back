@@ -234,7 +234,7 @@ app.post('/post-movimiento', (req, res) => {
   const date = (new Date(Date.now()))
   const date1 = date.getFullYear() + "-"  + (date.getMonth()+1) + "-" + date.getDate() + " "+ date.getHours() + ":" + date.getMinutes().toString() + ":00"
   console.log(date1)
-    pool.query(`insert into movimientos values('${convertirString(req.body.Movimiento)}','${convertirString(req.body.Tipo)}','${convertirString(req.body.Local)}',${req.body.Monto.replaceAll(',','')},'${convertirString(req.body.Descripcion)}','${convertirString(date1)}')`);
+    pool.query(`insert into movimientos values('${convertirString(req.body.Movimiento)}','${convertirString(req.body.Tipo)}','${convertirString(req.body.Local)}',${req.body.Monto.replaceAll(',','')},'${convertirString(req.body.Descripcion)}','${date1+'00:00:00'}')`);
 })
 
 app.post('/post-login', (req, res) => {
