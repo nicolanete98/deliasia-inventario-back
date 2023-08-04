@@ -237,6 +237,15 @@ app.post('/post-movimiento', (req, res) => {
     pool.query(`insert into movimientos values('${convertirString(req.body.Movimiento)}','${convertirString(req.body.Tipo)}','${convertirString(req.body.Local)}',${req.body.Monto.replaceAll(',','')},'${convertirString(req.body.Descripcion)}','${date1+'00:00:00'}')`);
 })
 
+app.post('/post-movimiento-new', (req, res) => {
+  res.send('/post-movimientos')
+  console.log(req.body)
+  const date = (new Date(Date.now()))
+  const date1 = date.getFullYear() + "-"  + (date.getMonth()+1) + "-" + date.getDate() + " "+ date.getHours() + ":" + date.getMinutes().toString() + ":00"
+  console.log(date1)
+    pool.query(`insert into movimientos_new (fecha,descripcion, local, monto, movimiento, tipo )  values('${date1+'00:00:00'}','${convertirString(req.body.Descripcion)}','${convertirString(req.body.Local)}',${req.body.Monto.replaceAll(',','')},'${convertirString(req.body.Movimiento)}','${convertirString(req.body.Tipo)}')`);
+})
+
 app.post('/post-login', (req, res) => {
   //res.send('/post-login')
   console.log(req.body)
